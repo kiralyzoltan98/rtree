@@ -15,15 +15,15 @@ public class History {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    String user;
+    String username;
 
     Timestamp createdAt;
 
     @Column(columnDefinition = "TEXT")
     private String jsonData;
 
-    public History(String user, Timestamp createdAt, String jsonData) {
-        this.user = user;
+    public History(String username, Timestamp createdAt, String jsonData) {
+        this.username = username;
         this.createdAt = createdAt;
         this.jsonData = jsonData;
     }

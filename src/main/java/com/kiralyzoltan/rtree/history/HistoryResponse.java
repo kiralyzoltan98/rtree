@@ -2,5 +2,5 @@ package com.kiralyzoltan.rtree.history;
 
 import java.sql.Timestamp;
 
-public record HistoryResponse(String user, Timestamp createdAt, String jsonData) {
+public record HistoryResponse(String username, Timestamp createdAt, String jsonData) {
 }

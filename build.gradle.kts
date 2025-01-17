@@ -40,6 +40,8 @@ dependencies {
 	annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 	// https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
 	implementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
+	// https://mvnrepository.com/artifact/com.h2database/h2
+	testImplementation("com.h2database:h2:2.3.232")
 }
 
 tasks.withType<Test> {
