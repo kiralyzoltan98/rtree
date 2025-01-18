@@ -76,7 +76,7 @@ public class RTreeController {
         if (jsonData.isPresent()) {
             spec = spec.and(HistorySpecifications.hasJsonData(jsonData.get()));
         }
-        //TODO: fix Timestamp format to be able to be reused from a response.
+
         return historyRepository.findAll(spec).stream()
                 .map(historyMapper::toResponse)
                 .collect(Collectors.toList());
