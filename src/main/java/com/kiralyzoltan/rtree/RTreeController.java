@@ -2,6 +2,7 @@ package com.kiralyzoltan.rtree;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kiralyzoltan.rtree.config.AppInstanceConfig;
 import com.kiralyzoltan.rtree.history.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
@@ -26,14 +27,16 @@ public class RTreeController {
 
     private final HistoryRepository historyRepository;
     private final HistoryMapper historyMapper;
+    private final AppInstanceConfig appInstanceConfig;
 
-    public RTreeController(HistoryRepository historyRepository, HistoryMapper historyMapper) {
+    public RTreeController(HistoryRepository historyRepository, HistoryMapper historyMapper, AppInstanceConfig appInstanceConfig) {
         this.historyRepository = historyRepository;
         this.historyMapper = historyMapper;
+        this.appInstanceConfig = appInstanceConfig;
     }
 
     @GetMapping("/getunique")
-    public List<String> getUniqueFilenames(@RequestParam String path, @RequestParam String extension) { // TODO: implement extension filtering
+    public List<String> getUniqueFilenames(@RequestParam String path, @RequestParam Optional<String> extension) { // TODO: implement extension filtering
         HashMap<String, Integer> filenames = new HashMap<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of(path))) {
             for (Path file : stream) {
@@ -49,7 +52,7 @@ public class RTreeController {
         try {
             ObjectMapper mapper = new ObjectMapper();
             //TODO: get the appinstance/appid from properties
-            historyRepository.save(new History("admin", new Timestamp(System.currentTimeMillis()), mapper.writeValueAsString(uniqueFilenames)));
+            historyRepository.save(new History(appInstanceConfig.getInstanceName(), new Timestamp(System.currentTimeMillis()), mapper.writeValueAsString(uniqueFilenames)));
         } catch (JsonProcessingException e) {
             log.error("Error could not save history: {}", e.getMessage());
         }
@@ -58,14 +61,14 @@ public class RTreeController {
     }
 
     @GetMapping("/history")
-    public List<HistoryResponse> getHistory(@RequestParam Optional<String> user,
+    public List<HistoryResponse> getHistory(@RequestParam Optional<String> username,
                                             @RequestParam Optional<Timestamp> createdAt,
                                             @RequestParam Optional<String> jsonData)
     {
         Specification<History> spec = Specification.where(null);
 
-        if (user.isPresent()) {
-            spec = spec.and(HistorySpecifications.hasUser(user.get()));
+        if (username.isPresent()) {
+            spec = spec.and(HistorySpecifications.hasUsername(username.get()));
         }
         if (createdAt.isPresent()) {
             spec = spec.and(HistorySpecifications.hasCreatedAt(createdAt.get()));
@@ -73,7 +76,7 @@ public class RTreeController {
         if (jsonData.isPresent()) {
             spec = spec.and(HistorySpecifications.hasJsonData(jsonData.get()));
         }
-
+        //TODO: fix Timestamp format to be able to be reused from a response.
         return historyRepository.findAll(spec).stream()
                 .map(historyMapper::toResponse)
                 .collect(Collectors.toList());

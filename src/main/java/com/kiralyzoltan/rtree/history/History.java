@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 @RequiredArgsConstructor
 public class History {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 

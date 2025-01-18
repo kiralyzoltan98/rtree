@@ -5,9 +5,9 @@ import org.springframework.data.jpa.domain.Specification;
 import java.sql.Timestamp;
 
 public class HistorySpecifications {
-    public static Specification<History> hasUser(String user) {
+    public static Specification<History> hasUsername(String username) {
         return (root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("user"), user);
+                criteriaBuilder.equal(root.get("username"), username);
     }
 
     public static Specification<History> hasCreatedAt(Timestamp createdAt) {
