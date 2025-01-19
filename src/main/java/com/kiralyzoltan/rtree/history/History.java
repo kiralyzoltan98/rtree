@@ -19,7 +19,7 @@ public class History {
 
     Timestamp createdAt;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "LONGTEXT")
     private String jsonData;
 
     public History(String username, Timestamp createdAt, String jsonData) {

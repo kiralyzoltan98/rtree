@@ -64,5 +64,5 @@ gradle_build: # Build project with gradle
 database_build:
 	$(DOCKER) build -f database/Dockerfile -t kiralyzoltan98/mariadb-schema:latest
 
-instance_build:
+instance_build: gradle_build
 	$(DOCKER) build -f Dockerfile -t kiralyzoltan98/rtree:latest
