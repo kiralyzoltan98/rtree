@@ -116,7 +116,7 @@ Check if the containers started, issue a `podman ps` or `docker ps` command you 
 
 ### If you cant pull the images
 Podman should have docker.io registry enabled.
-If it isn't, you can enable it editing the /etc/containers/registries.conf file, and adding the following line:
+If it isn't, you can enable it by adding the following line to the /etc/containers/registries.conf file.
 ```bash
 unqualified-search-registries = ["docker.io"]
 ```
