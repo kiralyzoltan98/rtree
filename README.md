@@ -83,6 +83,11 @@ or
 make instance_build
 ```
 
+To generate the javadoc run:
+```bash
+make javadoc
+```
+
 ## Database
 The database is MariaDB. I use the latest official image from docker hub.
 The database is initiated with a schema, and some environment variables are set on docker run. (timezone for example)

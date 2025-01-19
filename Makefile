@@ -66,3 +66,6 @@ database_build:
 
 instance_build: gradle_build
 	$(DOCKER) build -f Dockerfile -t kiralyzoltan98/rtree:latest
+
+javadoc:
+	$(DOCKER) run --rm -u root -v "$(CURDIR):/home/gradle/project" -w /home/gradle/project gradle:8.12.0-jdk21-corretto gradle javadoc
