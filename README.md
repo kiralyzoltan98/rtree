@@ -41,6 +41,7 @@ The project consists of a Spring application that has two core endpoints:
    - The path of the generated directory is `/tmp/rtree` so you should use this path as a parameter for the `/getunique` endpoint.
 
 ## Generated structure: (/generate)
+#### WARNING: The generated path is only available on the instance that generated it.
 ``* means unique``
 ```text
 /tmp/rtree
