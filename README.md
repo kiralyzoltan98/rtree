@@ -77,7 +77,9 @@ The project also contains a Makefile, that handles the building, and running of 
 By default, make pulls the images from my docker hub repository, but you can also build the images locally by running:
 ```bash
 make database_build
-# or
+```
+or
+```bash
 make instance_build
 ```
 

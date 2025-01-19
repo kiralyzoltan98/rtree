@@ -31,6 +31,14 @@ public class RTreeService {
         this.historyMapper = historyMapper;
     }
 
+    /**
+     *
+     * @param path An absolute path to a directory we want to search for unique filenames.
+     * @param extension An optional file extension to filter the search by (e.g. ".txt" or ".json") only one at a time is supported for now.
+     * @return A list of unique filenames that only appear once in the directory and its subdirectories.
+     * @throws IOException if the input path is not a directory or if the directory does not exist.
+     * It can also throw the IOException if the user does not have the necessary permissions to read the directory.
+     */
     public List<String> getUniqueFilenamesAndSaveHistory(String path, Optional<String> extension) throws IOException {
         List<String> uniqueFilenames = getUniqueFilenames(path, new HashMap<>(), extension);
 
@@ -40,6 +48,15 @@ public class RTreeService {
         return uniqueFilenames;
     }
 
+    /**
+     * Recursive function to search for unique filenames in a directory and its subdirectories.
+     * @param path The absolute path of the directory we want to search for unique filenames in.
+     * @param filenames A map that stores the filenames and their occurrence count.
+     * @param extension An optional file extension to filter the search by (e.g. ".txt" or ".json") only one at a time is supported for now.
+     * @return A list of unique filenames that only appear once in the directory and its subdirectories.
+     * @throws IOException if the input path is not a directory or if the directory does not exist.
+     * It can also throw the IOException if the user does not have the necessary permissions to read the directory.
+     */
     public List<String> getUniqueFilenames(String path, HashMap<String, Integer> filenames, Optional<String> extension) throws IOException {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of(path))) {
             for (Path item : stream) {
@@ -57,6 +74,13 @@ public class RTreeService {
         return filenames.keySet().stream().filter(k -> filenames.get(k) == 1).toList();
     }
 
+    /**
+     *
+     * @param username Filters the result by the username column in the database.
+     * @param createdAt Filters the result by the createdAt column in the database.
+     * @param jsonData Filters the result by the jsonData column in the database.
+     * @return A list of HistoryResponse objects that match the given filters.
+     */
     public List<HistoryResponse> getHistory(Optional<String> username, Optional<Timestamp> createdAt, Optional<String> jsonData) {
         Specification<History> spec = Specification.where(null);
 
@@ -77,6 +101,11 @@ public class RTreeService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     *
+     * @return The absolute path of the generated directory structure. Reusable at the /getunique endpoint.
+     * @throws IOException if the directory cannot be created or if the user does not have the necessary permissions to create the directory.
+     */
     public String generateDirectoryStructure() throws IOException {
         if (previousTempDir != null && Files.exists(previousTempDir)) {
             FileSystemUtils.deleteRecursively(previousTempDir);
