@@ -1,6 +1,5 @@
 package com.kiralyzoltan.rtree;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kiralyzoltan.rtree.config.AppInstanceConfig;
 import com.kiralyzoltan.rtree.history.*;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
-import java.nio.file.DirectoryIteratorException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,25 +34,20 @@ public class RTreeService {
     }
 
     @GetMapping("/getunique")
-    public List<String> getUniqueFilenames(@RequestParam String path, @RequestParam Optional<String> extension) { // TODO: implement extension filtering
+    public List<String> getUniqueFilenames(@RequestParam String path, @RequestParam Optional<String> extension) throws IOException { // TODO: implement extension filtering
         HashMap<String, Integer> filenames = new HashMap<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of(path))) {
             for (Path file : stream) {
                 String filename = file.getFileName().toString();
                 filenames.put(filename, filenames.getOrDefault(filename, 0) + 1);
             }
-        } catch (IOException | DirectoryIteratorException e) {
-            log.error("Error could not read directory: {}", e.getMessage());
         }
 
         List<String> uniqueFilenames = filenames.keySet().stream().filter(k -> filenames.get(k) == 1).toList();
 
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            historyRepository.save(new History(appInstanceConfig.getInstanceName(), new Timestamp(System.currentTimeMillis()), mapper.writeValueAsString(uniqueFilenames)));
-        } catch (JsonProcessingException e) {
-            log.error("Error could not save history: {}", e.getMessage());
-        }
+        ObjectMapper mapper = new ObjectMapper();
+        historyRepository.save(new History(appInstanceConfig.getInstanceName(), new Timestamp(System.currentTimeMillis()), mapper.writeValueAsString(uniqueFilenames)));
+
 
         return uniqueFilenames;
     }

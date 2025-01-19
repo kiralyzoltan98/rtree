@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +22,7 @@ public class RTreeController {
     }
 
     @GetMapping("/getunique")
-    public List<String> getUniqueFilenames(@RequestParam String path, @RequestParam Optional<String> extension) { // TODO: implement extension filtering
+    public List<String> getUniqueFilenames(@RequestParam String path, @RequestParam Optional<String> extension) throws IOException {
         return rTreeService.getUniqueFilenames(path, extension);
     }
 
