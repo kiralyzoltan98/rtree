@@ -17,6 +17,7 @@ configurations {
 	compileOnly {
 		extendsFrom(configurations.annotationProcessor.get())
 	}
+	create("mockitoAgent")
 }
 
 repositories {
@@ -45,8 +46,13 @@ dependencies {
 	testImplementation("com.h2database:h2:2.3.232")
 	// https://mvnrepository.com/artifact/org.mockito/mockito-junit-jupiter
 	testImplementation("org.mockito:mockito-junit-jupiter:5.15.2")
+	// Add Mockito agent configuration
+	"mockitoAgent"("org.mockito:mockito-core:5.15.2") {
+		isTransitive = false
+	}
 }
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+	jvmArgs("-javaagent:${configurations["mockitoAgent"].singleFile.absolutePath}")
 }
