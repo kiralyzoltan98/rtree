@@ -23,7 +23,16 @@ endif
 timeout:
 	$(WAIT_5)
 
-run: network database_start instance1_start instance2_start
+DOCKER := $(shell podman -v && echo podman || (docker -v && echo docker || echo none))
+
+ifeq ($(DOCKER), none)
+$(error Neither podman nor docker is installed on this system)
+endif
+
+run: start_docker_engine network database_start instance1_start instance2_start
+
+start_docker_engine:
+	-podman ps || podman machine start
 
 network: # Create network if not exists
 	podman network exists $(NETWORK_NAME) || podman network create $(NETWORK_NAME)
