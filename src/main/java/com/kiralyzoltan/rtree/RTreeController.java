@@ -2,6 +2,7 @@ package com.kiralyzoltan.rtree;
 
 import com.kiralyzoltan.rtree.history.*;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,8 +28,12 @@ public class RTreeController {
     @GetMapping("/history")
     public List<HistoryResponse> getHistory(@RequestParam Optional<String> username,
                                             @RequestParam Optional<Timestamp> createdAt,
-                                            @RequestParam Optional<String> jsonData)    // The json data would fit better in the request body
-    {
+                                            @RequestParam Optional<String> jsonData) { // The json data would fit better in the request body
         return rTreeService.getHistory(username, createdAt, jsonData);
+    }
+
+    @PutMapping("/generate")
+    public String generate() throws IOException {
+        return rTreeService.generateDirectoryStructure();
     }
 }

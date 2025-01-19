@@ -41,12 +41,33 @@ The project consists of a Spring application that has two core endpoints:
    - The path of the generated directory is `/tmp/rtree` so you should use this path as a parameter for the `/getunique` endpoint.
 
 ## Generated structure: (/generate)
+``* means unique``
 ```text
 /tmp/rtree
-├── a
-│   ├── 1.txt
-│   ├── 2.txt
-├── b
+│   file1.txt   *
+│   file2.json  *
+│   file2.txt
+├───a
+│   │   file2.txt
+│   │   file3.txt
+│   │   file3.yaml
+│   └───aa
+│       │   file3.txt
+│       │   file3.yaml
+│       │   file4.txt
+│       │   file4.yaml  *
+│       └───aaa
+│               file4.c     *
+│               file4.txt
+│               file5.txt
+│               file55.txt  *
+├───b
+│       file5.txt
+│       file6.c     *
+│       file6.txt
+└───c
+        file6.txt
+        file7.txt   *
 ```
 
 The project also contains a Makefile, that handles the building, and running of the applications, and the database.

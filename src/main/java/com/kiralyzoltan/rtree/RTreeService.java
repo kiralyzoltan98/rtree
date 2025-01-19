@@ -5,6 +5,7 @@ import com.kiralyzoltan.rtree.config.AppInstanceConfig;
 import com.kiralyzoltan.rtree.history.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class RTreeService {
+    private static Path previousTempDir = null;
 
     private final AppInstanceConfig appInstanceConfig;
     private final HistoryRepository historyRepository;
@@ -73,5 +75,42 @@ public class RTreeService {
         return historyRepository.findAll(spec).stream()
                 .map(historyMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    public String generateDirectoryStructure() throws IOException {
+        if (previousTempDir != null && Files.exists(previousTempDir)) {
+            FileSystemUtils.deleteRecursively(previousTempDir);
+        }
+
+        Path tempDir = Files.createTempDirectory("rtree");
+        previousTempDir = tempDir;
+
+        Path subDir = Files.createDirectory(tempDir.resolve("a"));
+        Path subSubDir = Files.createDirectory(subDir.resolve("aa"));
+        Path subSubSubDir = Files.createDirectory(subSubDir.resolve("aaa"));
+        Path subDir2 = Files.createDirectory(tempDir.resolve("b"));
+        Path subDir3 = Files.createDirectory(tempDir.resolve("c"));
+
+        Files.createFile(tempDir.resolve("file1.txt")); // unique
+        Files.createFile(tempDir.resolve("file2.txt"));
+        Files.createFile(tempDir.resolve("file2.json")); // unique
+        Files.createFile(subDir.resolve("file2.txt"));
+        Files.createFile(subDir.resolve("file3.txt"));
+        Files.createFile(subDir.resolve("file3.yaml"));
+        Files.createFile(subSubDir.resolve("file3.txt"));
+        Files.createFile(subSubDir.resolve("file3.yaml"));
+        Files.createFile(subSubDir.resolve("file4.txt"));
+        Files.createFile(subSubDir.resolve("file4.yaml")); // unique
+        Files.createFile(subSubSubDir.resolve("file4.txt"));
+        Files.createFile(subSubSubDir.resolve("file4.c")); // unique
+        Files.createFile(subSubSubDir.resolve("file5.txt"));
+        Files.createFile(subSubSubDir.resolve("file55.txt")); // unique
+        Files.createFile(subDir2.resolve("file5.txt"));
+        Files.createFile(subDir2.resolve("file6.txt"));
+        Files.createFile(subDir2.resolve("file6.c")); // unique
+        Files.createFile(subDir3.resolve("file6.txt"));
+        Files.createFile(subDir3.resolve("file7.txt")); // unique
+
+        return tempDir.toString();
     }
 }
