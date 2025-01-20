@@ -21,6 +21,8 @@ import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +32,7 @@ import static org.mockito.Mockito.*;
 public class RTreeServiceTests {
 
     private final String TEST_DIR = "test";
+    private Path tempDirToDelete;
 
     @Mock
     private AppInstanceConfig appInstanceConfig;
@@ -49,9 +52,8 @@ public class RTreeServiceTests {
 
     @AfterEach
     void cleanUp() throws IOException {
-        Path testPath = Path.of(TEST_DIR);
-        if (Files.exists(testPath)) {
-            FileSystemUtils.deleteRecursively(testPath);
+        if (tempDirToDelete != null &&Files.exists(this.tempDirToDelete)) {
+            FileSystemUtils.deleteRecursively(this.tempDirToDelete);
         }
     }
 
@@ -59,6 +61,7 @@ public class RTreeServiceTests {
     void getUniqueFilenames_WithValidPath_ReturnsUniqueFiles() throws Exception {
         // Arrange
         Path tempDir = Files.createTempDirectory(TEST_DIR);
+        tempDirToDelete = tempDir;
         Files.createFile(tempDir.resolve("file1.txt"));
         Files.createFile(tempDir.resolve("file2.txt"));
         Files.createFile(tempDir.resolve("file3.txt"));
@@ -80,6 +83,7 @@ public class RTreeServiceTests {
     void getUniqueFilenames_WithNestedValidPath_ReturnsUniqueFiles() throws Exception {
         // Arrange
         Path tempDir = Files.createTempDirectory(TEST_DIR);
+        tempDirToDelete = tempDir;
         Path subDir1 = Files.createDirectory(tempDir.resolve("subDir1"));
         Path subDir2 = Files.createDirectory(tempDir.resolve("subDir2"));
         Path subDir3 = Files.createDirectory(tempDir.resolve("subDir3"));
@@ -98,6 +102,7 @@ public class RTreeServiceTests {
         // Act
         List<String> result = rTreeService.getUniqueFilenamesAndSaveHistory(tempDir.toString(), Optional.empty());
 
+        // Assert
         assertEquals(2, result.size());
         assertTrue(result.contains("file1.txt"));
         assertTrue(result.contains("file4.txt"));
@@ -108,6 +113,7 @@ public class RTreeServiceTests {
     void getUniqueFilenames_WithValidPath_ReturnsUniqueFiles_EvenIfFileOccursOddTimes() throws IOException {
         // Arrange
         Path tempDir = Files.createTempDirectory(TEST_DIR);
+        tempDirToDelete = tempDir;
         Path subDir1 = Files.createDirectory(tempDir.resolve("subDir1"));
         Path subDir2 = Files.createDirectory(tempDir.resolve("subDir2"));
 
@@ -132,6 +138,7 @@ public class RTreeServiceTests {
     void getUniqueFilenames_WithDuplicates_ReturnsOnlyUniqueFiles() throws Exception {
         // Arrange
         Path tempDir = Files.createTempDirectory(TEST_DIR);
+        tempDirToDelete = tempDir;
         Path subDir = Files.createDirectory(tempDir.resolve("a"));
         Files.createFile(tempDir.resolve("file1.txt"));
         Files.createFile(tempDir.resolve("file2.txt"));
@@ -151,6 +158,29 @@ public class RTreeServiceTests {
     }
 
     @Test
+    void getUniqueFilenames_WithExtension_ReturnsOnlyFilesWithGivenExtension() throws Exception {
+        // Arrange
+        Path tempDir = Files.createTempDirectory(TEST_DIR);
+        tempDirToDelete = tempDir;
+        Files.createFile(tempDir.resolve("file1.txt"));
+        Files.createFile(tempDir.resolve("file2.txt"));
+        Files.createFile(tempDir.resolve("file3.json"));
+        Files.createFile(tempDir.resolve("file4.json"));
+        Files.createFile(tempDir.resolve("file5.yaml"));
+
+        when(appInstanceConfig.getInstanceName()).thenReturn("test-instance");
+
+        // Act
+        List<String> result = rTreeService.getUniqueFilenamesAndSaveHistory(tempDir.toString(), Optional.of("json"));
+
+        // Assert
+        assertEquals(2, result.size());
+        assertTrue(result.contains("file3.json"));
+        assertTrue(result.contains("file4.json"));
+        verify(historyRepository).save(any(History.class));
+    }
+
+    @Test
     void getUniqueFilenames_WithInvalidPath_ThrowsNoSuchFileException() {
         assertThrows(NoSuchFileException.class, () -> {
             // Act
@@ -160,7 +190,7 @@ public class RTreeServiceTests {
 
     @Test
     @SuppressWarnings("unchecked") // We know that the mock is of type JpaSpecificationExecutor<History>
-    void getHistory_WithAllParameters_ReturnsFilteredResults() {
+    void getHistory_WithAllParameters_ReturnsResults() {
         // Arrange
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         History history = new History("test-user", timestamp, "test-data");
@@ -189,6 +219,117 @@ public class RTreeServiceTests {
 
     @Test
     @SuppressWarnings("unchecked") // We know that the mock is of type JpaSpecificationExecutor<History>
+    void getHistory_WithUsernameSet_ReturnsMultipleResults() {
+        // Arrange
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        History history = new History("test-user", timestamp, "test-data");
+        History history2 = new History("test-user", timestamp, "test-data2");
+        HistoryResponse historyResponse = new HistoryResponse("test-user", timestamp, "test-data");
+        HistoryResponse historyResponse2 = new HistoryResponse("test-user", timestamp, "test-data2");
+
+        when(historyRepository.findAll(any(Specification.class)))
+                .thenReturn(List.of(history, history2));
+        when(historyMapper.toResponse(history))
+                .thenReturn(historyResponse);
+        when(historyMapper.toResponse(history2))
+                .thenReturn(historyResponse2);
+
+        // Act
+        List<HistoryResponse> result = rTreeService.getHistory(
+                Optional.of("test-user"),
+                Optional.empty(),
+                Optional.empty());
+
+        // Assert
+        assertEquals(2, result.size());
+        assertEquals("test-user", result.getFirst().username());
+        assertEquals(timestamp, result.getFirst().createdAt());
+        assertEquals("test-data", result.getFirst().jsonData());
+        assertEquals("test-user", result.get(1).username());
+        assertEquals(timestamp, result.get(1).createdAt());
+        assertEquals("test-data2", result.get(1).jsonData());
+        verify(historyRepository).findAll(any(Specification.class));
+        verify(historyMapper, times(2)).toResponse(any(History.class));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked") // We know that the mock is of type JpaSpecificationExecutor<History>
+    void getHistory_WithTimestampSet_ReturnsMultipleResults() {
+        // Arrange
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        History history = new History("test-user", timestamp, "test-data");
+        History history2 = new History("test-user", timestamp, "test-data2");
+        HistoryResponse historyResponse = new HistoryResponse("test-user", timestamp, "test-data");
+        HistoryResponse historyResponse2 = new HistoryResponse("test-user", timestamp, "test-data2");
+
+        when(historyRepository.findAll(any(Specification.class)))
+                .thenAnswer(invocation -> {
+                    // Simulate filtering by manually returning filtered list
+                    return Stream.of(history, history2)
+                            .filter(h -> h.getCreatedAt().equals(timestamp))
+                            .collect(Collectors.toList());
+                });
+        when(historyMapper.toResponse(history))
+                .thenReturn(historyResponse);
+        when(historyMapper.toResponse(history2))
+                .thenReturn(historyResponse2);
+
+        // Act
+        List<HistoryResponse> result = rTreeService.getHistory(
+                Optional.empty(),
+                Optional.of(timestamp),
+                Optional.empty()
+        );
+
+        // Assert
+        assertEquals(2, result.size());
+        assertEquals("test-user", result.getFirst().username());
+        assertEquals(timestamp, result.getFirst().createdAt());
+        assertEquals("test-data", result.getFirst().jsonData());
+        assertEquals("test-user", result.get(1).username());
+        assertEquals(timestamp, result.get(1).createdAt());
+        assertEquals("test-data2", result.get(1).jsonData());
+        verify(historyRepository).findAll(any(Specification.class));
+        verify(historyMapper, times(2)).toResponse(any(History.class));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked") // We know that the mock is of type JpaSpecificationExecutor<History>
+    void getHistory_WithUniqueDataSet_ReturnsOneResult() {
+        // Arrange
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        History history = new History("test-user", timestamp, "test-data");
+        History history2 = new History("test-user", timestamp, "test-data2");
+        HistoryResponse historyResponse = new HistoryResponse("test-user", timestamp, "test-data");
+
+        when(historyRepository.findAll(any(Specification.class)))
+                .thenAnswer(invocation -> {
+                    // Simulate filtering by manually returning filtered list
+                    return Stream.of(history, history2)
+                            .filter(h -> h.getJsonData().equals("test-data"))
+                            .collect(Collectors.toList());
+                });
+        when(historyMapper.toResponse(history))
+                .thenReturn(historyResponse);
+
+        // Act
+        List<HistoryResponse> result = rTreeService.getHistory(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of("test-data")
+        );
+
+        // Assert
+        assertEquals(1, result.size());
+        assertEquals("test-user", result.getFirst().username());
+        assertEquals(timestamp, result.getFirst().createdAt());
+        assertEquals("test-data", result.getFirst().jsonData());
+        verify(historyRepository).findAll(any(Specification.class));
+        verify(historyMapper, times(1)).toResponse(any(History.class));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked") // We know that the mock is of type JpaSpecificationExecutor<History>
     void getHistory_WithNoParameters_ReturnsAllResults() {
         // Arrange
         History history = new History("test-user", new Timestamp(System.currentTimeMillis()), "test-data");
@@ -212,5 +353,26 @@ public class RTreeServiceTests {
         verify(historyMapper).toResponse(any(History.class));
     }
 
-    //TODO: Add more tests that cover extensions and other edge cases
+    @Test
+    void generateTempDirectoryStructure_ReturnsPath() throws IOException {
+        // Act
+        String result = rTreeService.generateDirectoryStructure();
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(Files.exists(Path.of(result)));
+    }
+
+    @Test
+    void generateTempDirectoryStructure_WithExistingTempDir_ReturnsNew_RemovesOld() throws IOException {
+        // Act
+        String first = rTreeService.generateDirectoryStructure();
+        String second = rTreeService.generateDirectoryStructure();
+
+        // Assert
+        assertNotNull(first);
+        assertNotNull(second);
+        assertTrue(Files.exists(Path.of(second)));
+        assertFalse(Files.exists(Path.of(first)));
+    }
 }
