@@ -110,7 +110,7 @@ jobs:
         context: ./database
         file: ./database/Dockerfile
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
+        tags: latest # ${{ steps.meta.outputs.tags }} # uses the branch name as tag
         labels: ${{ steps.meta.outputs.labels }}
 
     - name: Generate artifact attestation
@@ -162,7 +162,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: latest # ${{ steps.meta.outputs.tags }} # uses the branch name as tag
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Generate artifact attestation
