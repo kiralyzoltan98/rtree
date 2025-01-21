@@ -9,7 +9,7 @@
 - [x] updating makefile to handle multiple instances of the app
   - [x] The two used ports should be 8081 and 8082
 - [x] creating a github action to run the tests
-  - [ ] github action to push images if tests are passing
+  - [x] github action to push images if tests are passing
 - [x] refactor the code, actually solve the task
   - [x] introduce RtreeService
   - [x] Proper responses on endpoints, (with exception handler)
