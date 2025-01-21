@@ -14,7 +14,7 @@ on:
     branches: [ "master" ]
 
 env:
-  REGISTRY: kiralyzoltan98
+  REGISTRY: docker.io/kiralyzoltan98
   DATABASE_IMAGE_NAME: mariadb-schema
   INSTANCE_IMAGE_NAME: rtree
 
