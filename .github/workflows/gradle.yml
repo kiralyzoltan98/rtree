@@ -71,7 +71,7 @@ jobs:
     - run: chmod +x ./gradlew
 
     - name: Run tests with Gradle Wrapper
-      run: ./gradlew test
+    - run: ./gradlew test
 
     # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
     # See:
