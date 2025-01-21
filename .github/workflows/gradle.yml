@@ -91,6 +91,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    # Quickfix for "no such file or directory ./build/libs/rtree-0.0.1-SNAPSHOT.jar" -> Build it again!
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+
+    - name: Build with Gradle Wrapper
+      run: ./gradlew build
+
     - name: Log in to Docker Hub
       uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
       with:
@@ -132,6 +142,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      # Quickfix for "no such file or directory ./build/libs/rtree-0.0.1-SNAPSHOT.jar" -> Build it again!
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build with Gradle Wrapper
+        run: ./gradlew build
 
       - name: Log in to Docker Hub
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
