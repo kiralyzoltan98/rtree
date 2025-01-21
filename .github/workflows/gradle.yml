@@ -68,10 +68,10 @@ jobs:
       uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
     - name: Make gradlew executable
-    - run: chmod +x ./gradlew
+      run: chmod +x ./gradlew
 
     - name: Run tests with Gradle Wrapper
-    - run: ./gradlew test
+      run: ./gradlew test
 
     # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
     # See:
