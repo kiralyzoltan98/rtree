@@ -2,7 +2,5 @@
 
 useradd $USER
 
-su - $USER
-whoami
-java -jar /opt/rtree/app.jar
+exec su -P "$USER" -c "java -jar /opt/rtree/app.jar"
 

@@ -27,8 +27,8 @@ timeout:
 	$(WAIT_5)
 
 run: start_docker_engine create_network database_start
-    @make instance_run INSTANCE_PORT=8081
-    @make instance_run INSTANCE_PORT=8082
+	@ make instance_run INSTANCE_PORT=8081 USER=zoli
+	@ make instance_run INSTANCE_PORT=8082 USER=kiralyzoltan
 
 start_docker_engine:
 	-podman ps || podman machine start
@@ -38,7 +38,7 @@ create_network: # Create network if not exists
 
 # Every environment variable that make sees when it starts up is transformed into a make variable with the same name and value.
 instance_run: instance_build create_network
-	podman run --rm -p $(INSTANCE_PORT):8080 $(INSTANCE_RUN_COMMON)
+	podman run -p $(INSTANCE_PORT):8080 $(INSTANCE_RUN_COMMON)
 
 database_start: database_run
 	podman start $(DATABASE_HOST)
@@ -54,6 +54,9 @@ instance_build:
 
 javadoc:
 	podman run --rm -u root -v "$(CURDIR):/home/gradle/project" -w /home/gradle/project gradle:8.12.0-jdk21-corretto gradle javadoc
+
+demo2:
+	@ make demo USER=zoli
 
 demo:
 	echo ${USER}
