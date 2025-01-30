@@ -25,7 +25,7 @@ public class RTreeController {
     @Operation(summary = "Get unique filenames in a directory and its subdirectories")
     @GetMapping("/getunique")
     public List<String> getUniqueFilenames(@RequestParam @Parameter(description = "Absolute path to find unique files in") String path,
-                                           @RequestParam @Parameter(description = "extension filter, example values: txt json yaml c (only one at a time)")
+                                           @RequestParam @Parameter(description = "extension filter, example values: \"txt\" \"json\" \"yaml\" \"c\" or multiple separated by commas: \"txt,json\"")
                                            Optional<String> extension)
         throws IOException {
         return rTreeService.getUniqueFilenamesAndSaveHistory(path, extension);

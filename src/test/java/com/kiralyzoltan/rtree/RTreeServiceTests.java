@@ -181,6 +181,30 @@ public class RTreeServiceTests {
     }
 
     @Test
+    void getUniqueFilenames_WithMultipleExtension_ReturnsOnlyFilesWithGivenExtension() throws Exception {
+        // Arrange
+        Path tempDir = Files.createTempDirectory(TEST_DIR);
+        tempDirToDelete = tempDir;
+        Files.createFile(tempDir.resolve("file1.txt"));
+        Files.createFile(tempDir.resolve("file2.txt"));
+        Files.createFile(tempDir.resolve("file3.json"));
+        Files.createFile(tempDir.resolve("file4.json"));
+        Files.createFile(tempDir.resolve("file5.yaml"));
+
+        when(appInstanceConfig.getInstanceName()).thenReturn("test-instance");
+
+        // Act
+        List<String> result = rTreeService.getUniqueFilenamesAndSaveHistory(tempDir.toString(), Optional.of("json,yaml"));
+
+        // Assert
+        assertEquals(3, result.size());
+        assertTrue(result.contains("file3.json"));
+        assertTrue(result.contains("file4.json"));
+        assertTrue(result.contains("file5.yaml"));
+        verify(historyRepository).save(any(History.class));
+    }
+
+    @Test
     void getUniqueFilenames_WithInvalidPath_ThrowsNoSuchFileException() {
         assertThrows(NoSuchFileException.class, () -> {
             // Act

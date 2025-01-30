@@ -17,7 +17,7 @@
 - [x] java doc
 - [x] test it if it works on linux
 - [x] (+) add optional extension parameter to the /getunique endpoint that returns only the unique files with the given extension.
-  - [ ] ability filter by multiple extensions
+  - [x] ability filter by multiple extensions
 - [x] (+) generator endpoint that creates a structure so the app can be tested against it, and return the result of the tree command.
     - [x] use different file extensions (txt, json, yaml, c)
 - [x] (+) host images on docker hub

@@ -12,10 +12,12 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class RTreeService {
@@ -34,13 +36,20 @@ public class RTreeService {
     /**
      *
      * @param path An absolute path to a directory we want to search for unique filenames.
-     * @param extension An optional file extension to filter the search by (e.g. ".txt" or ".json") only one at a time is supported for now.
+     * @param extension An optional file extension to filter the search by (e.g. "txt" or "json") you can list multiple extensions separated by commas. ("txt,json")
      * @return A list of unique filenames that only appear once in the directory and its subdirectories.
      * @throws IOException if the input path is not a directory or if the directory does not exist.
      * It can also throw the IOException if the user does not have the necessary permissions to read the directory.
      */
     public List<String> getUniqueFilenamesAndSaveHistory(String path, Optional<String> extension) throws IOException {
-        List<String> uniqueFilenames = getUniqueFilenames(path, new HashMap<>(), extension);
+        List<String> extensions = new ArrayList<>();
+        if (extension.isPresent() && extension.get().contains(",")) {
+            extensions = Stream.of(extension.get().split(",")).map(String::trim).toList();
+        } else if (extension.isPresent()) {
+            extensions.add(extension.get());
+        }
+
+        List<String> uniqueFilenames = getUniqueFilenames(path, new HashMap<>(), Optional.of(extensions));
 
         ObjectMapper mapper = new ObjectMapper();
         historyRepository.save(new History(appInstanceConfig.getInstanceName(), new Timestamp(System.currentTimeMillis()), mapper.writeValueAsString(uniqueFilenames)));
@@ -52,19 +61,19 @@ public class RTreeService {
      * Recursive function to search for unique filenames in a directory and its subdirectories.
      * @param path The absolute path of the directory we want to search for unique filenames in.
      * @param filenames A map that stores the filenames and their occurrence count.
-     * @param extension An optional file extension to filter the search by (e.g. ".txt" or ".json") only one at a time is supported for now.
+     * @param extensions An optional file extensions to filter the search by (e.g. ".txt" or ".json") only one at a time is supported for now.
      * @return A list of unique filenames that only appear once in the directory and its subdirectories.
      * @throws IOException if the input path is not a directory or if the directory does not exist.
      * It can also throw the IOException if the user does not have the necessary permissions to read the directory.
      */
-    public List<String> getUniqueFilenames(String path, HashMap<String, Integer> filenames, Optional<String> extension) throws IOException {
+    public List<String> getUniqueFilenames(String path, HashMap<String, Integer> filenames, Optional<List<String>> extensions) throws IOException {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of(path))) {
             for (Path item : stream) {
                 String filename = item.getFileName().toString();
                 if (Files.isDirectory(item)) {
-                    getUniqueFilenames(item.toString(), filenames, extension);
+                    getUniqueFilenames(item.toString(), filenames, extensions);
                 } else {
-                    if (extension.isEmpty() || filename.endsWith(extension.get())) {
+                    if (extensions.isEmpty() || extensions.get().isEmpty() || extensions.get().stream().anyMatch(filename::endsWith)) {
                         filenames.put(filename, filenames.getOrDefault(filename, 0) + 1);
                     }
                 }
